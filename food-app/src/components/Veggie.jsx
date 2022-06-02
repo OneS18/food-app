@@ -1,106 +1,118 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import styled from "styled-components";
-import { Splide, SplideTrack, SplideSlide } from "@splidejs/react-splide";
-import "@splidejs/react-splide/css/core";
-import "@splidejs/react-splide/css";
+
+import { Splide, SplideSlide } from "@splidejs/react-splide";
+import "@splidejs/splide/dist/css/themes/splide-default.min.css";
+
+import { Link } from "react-router-dom";
 
 const Veggie = () => {
-  const [vaggie, setVaggie] = useState([]);
+  const [veggies, setVeggies] = useState([]);
 
-  useEffect(() => {
-    getVaggie();
-  }, []);
+  const getVeggies = async () => {
+    const getData = localStorage.getItem("veggies");
 
-  const getVaggie = async () => {
-    const check = localStorage.getItem("vaggie");
-
-    if (check) {
-      setVaggie(JSON.parse(check));
+    if (getData) {
+      setVeggies(JSON.parse(getData));
     } else {
-      const api = await fetch(
-        `https://api.spoonacular.com/recipes/random?apiKey=${process.env.REACT_APP_API_KEY}&number=9&tags=vegetarian`
+      const resp = await fetch(
+        `https://api.spoonacular.com/recipes/random?apiKey=${process.env.REACT_APP_FOOD_API_KEY}&tags=vegetarian&number=10`
       );
-
-      const data = await api.json();
-      localStorage.setItem("vaggie", JSON.stringify(data.recipes));
-      console.log(data);
-      setVaggie(data.recipes);
+      const data = await resp.json();
+      setVeggies(data.recipes);
+      localStorage.setItem("veggies", JSON.stringify(data.recipes));
+      console.log(data.recipes);
     }
   };
 
-  return (
-    <div>
-      <Wrapper>
-        <h3>Vegetarian Picks</h3>
+  useEffect(() => {
+    getVeggies();
+  }, []);
 
-        <Splide
-          options={{
-            perPage: 4,
-            arrows: false,
-            pagination: false,
-            grag: "free",
-            gap: "5rem",
-          }}
-        >
-          {vaggie.map((recipe) => {
-            return (
-              <SplideSlide key={recipe.id}>
-                <Card>
-                  <p>{recipe.title}</p>
-                  <img src={recipe.image} alt="" />
-                  <Gradient />
-                </Card>
-              </SplideSlide>
-            );
-          })}
-        </Splide>
-      </Wrapper>
-    </div>
+  return (
+    <Wrapper>
+      <h3>Vegetarian Picks</h3>
+      <Splide
+        options={{
+          perPage: 3,
+          arrows: false,
+          pagination: false,
+          drag: "free",
+          gap: "5rem",
+          breakpoints: {
+            767: {
+              perPage: 2,
+            },
+            640: {
+              perPage: 1,
+            },
+          },
+        }}
+      >
+        {veggies.map(({ title, id, image }) => (
+          <SplideSlide key={id}>
+            <Card>
+              <Link to={`/recipe/${id}`}>
+                <p>{title}</p>
+                <img src={image} alt={title} />
+                <Gradient />
+              </Link>
+            </Card>
+          </SplideSlide>
+        ))}
+      </Splide>
+    </Wrapper>
   );
 };
 
 const Wrapper = styled.div`
-  margin: 4rem 0rem;
+  margin: 4rem 0;
+
+  h3 {
+    color: #fff;
+  }
 `;
 
 const Card = styled.div`
   min-height: 25rem;
-  border-radius: 2rem;
   overflow: hidden;
   position: relative;
 
   img {
-    border-radius: 2rem;
     position: absolute;
     left: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;
+    border-radius: 2rem;
   }
+
   p {
+    color: #fff;
     position: absolute;
-    z-index: 10;
     left: 50%;
-    bottom: 0%;
-    transform: translate(-50%, 0%);
-    color: white;
-    widht: 100%;
+    bottom: 0;
+    transform: translate(-50%, 0);
     text-align: center;
+    color: #fff;
+    width: 100%;
+    height: 40%;
     font-weight: 600;
     font-size: 1rem;
-    height: 40%;
     display: flex;
     justify-content: center;
     align-items: center;
+    z-index: 10;
   }
 `;
 
 const Gradient = styled.div`
-  z-index: 3;
   position: absolute;
   width: 100%;
   height: 100%;
-  background: liner-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.5));
+  background: linear-gradient(rgba(0, 0, 0, 0), rgba(0, 0, 0, 0.5));
+  z-index: 3;
+  border-radius: 2rem;
 `;
 
 export default Veggie;
